@@ -44,6 +44,10 @@ def parse_code(tokens):
             i += a[1]
         elif a[0] == 'INCLUDE_STATEMENT':
             o += parse_code(lexer.tokenize(a[1][1:-1] + ';'))
+        elif a[0] == 'IF_SHORTHAND':
+            a = parse_if_shorthand(tokens, i)
+            o += a[0]
+            i += a[1]
         elif a[0] == 'SCOPE+1':
             scope += 1
         elif a[0] == 'SCOPE-1':
@@ -170,3 +174,22 @@ def parse_catch_definer(tokens, i):
     else:
         c = ''.join([a[1] for a in c]).replace(';', '')
     return [scope * '  ' + 'except ' + c + ':\n', tokens.index(['SCOPE+1', '{'], i) - 1 - i]
+
+
+def parse_if_shorthand(tokens, i):
+    c = tokens[1:tokens.index(['KEY', '::'], 1)]
+    t = tokens[1+tokens.index(['KEY', '::'], 1):tokens.index(['PIPE', '|'], 1+tokens.index(['KEY', '::'], 1))]
+    f = tokens[1+tokens.index(['PIPE', '|'], 1+tokens.index(['KEY', '::'])):tokens.index(['LINEFEED', ';'], 1)]
+    if '`' in ''.join([a[1] for a in c]):
+        c = parse_code(c).replace('\n', '').replace('  ', '')
+    else:
+        c = ''.join([a[1] for a in c]).replace(';', '')
+    if '`' in ''.join([a[1] for a in t]):
+        t = parse_code(t).replace('\n', '').replace('  ', '')
+    else:
+        t = ''.join([a[1] for a in t]).replace(';', '')
+    if '`' in ''.join([a[1] for a in f]):
+        f = parse_code(f).replace('\n', '').replace('  ', '')
+    else:
+        f = ''.join([a[1] for a in f]).replace(';', '')
+    return [scope * '  ' + t + ' if ' + c + ' else ' + f + '\n', tokens.index(['LINEFEED', ';']) - 1 - i]

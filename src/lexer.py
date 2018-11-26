@@ -29,6 +29,10 @@ def tokenize(string):
             l.append(['TRY_DEFINER', a])
         elif a == 'catch':
             l.append(['CATCH_DEFINER', a])
+        elif a == '?':
+            l.append(['IF_SHORTHAND', a])
+        elif a == '|':
+            l.append(['PIPE', a])
         elif a == '+=' or a == '-=' or a == '*=' or a == '/=' or a == '%=':
             l.append(['INCREMENTAL_OPERATOR', a])
         elif a in ',':
