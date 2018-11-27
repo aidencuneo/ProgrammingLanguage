@@ -5,16 +5,23 @@ def tokenize(string):
     src = func.do_split(string)
     l = []
     for a in src:
-        lf = False
+        lf = comma = False
         if a.endswith(';') and a != ';':
             a = a[:-1]
             lf = True
+        if a.endswith(',') and a != ',':
+            a = a[:-1]
+            comma = True
         if a.startswith('$'):
             l.append(['VARIABLE', a])
         elif a in ['if', 'else', 'elif', 'while', 'for']:
             l.append(['KEYWORD', a])
-        elif a in ['import', 'raise', 'return']:
-            l.append(['SPECIAL_KEYWORD', a])
+        elif a == 'import':
+            l.append(['IMPORT_STATEMENT', a])
+        elif a == 'raise':
+            l.append(['RAISE_STATEMENT', a])
+        elif a == 'return':
+            l.append(['RETURN_STATEMENT', a])
         elif a in ['pass', 'break']:
             l.append(['STATIC_KEYWORD', a])
         elif a == 'fun':
@@ -35,8 +42,6 @@ def tokenize(string):
             l.append(['PIPE', a])
         elif a == '+=' or a == '-=' or a == '*=' or a == '/=' or a == '%=':
             l.append(['INCREMENTAL_OPERATOR', a])
-        elif a in ',':
-            l.append(['SYMBOL', a])
         elif a in '*-/+%=':
             l.append(['OPERATOR', a])
         elif a == '&&' or a == '||':
@@ -70,11 +75,13 @@ def tokenize(string):
         elif a.startswith('`') and a.endswith('`'):
             l.append(['INCLUDE_STATEMENT', a])
         elif re.match("[a-z]", a) or re.match("[A-Z]", a):
-            l.append(['INDENTIFIER', a])
+            l.append(['IDENTIFIER', a])
         elif a.startswith('__') and a.endswith('__'):
             l.append(['SPECIAL_IDENTIFIER', a])
         else:
             l.append(['UNKNOWN', a])
         if lf:
             l.append(['LINEFEED', ';'])
+        elif comma:
+            l.append(['SYMBOL', ','])
     return l

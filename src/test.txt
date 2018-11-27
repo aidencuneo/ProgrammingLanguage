@@ -3,12 +3,12 @@
   First started on: 22/11/18.
 **
 
-import random sys;
+import random, sys;
 
 class Main {
     fun __init__ self {
-        !print 'Hey!';
         $self.get_input a = 'Enter file name: ';
+        **$var a;**
         !self.importFile a;
     }
 
@@ -40,7 +40,6 @@ class Main {
     }
 
     fun roundNumber self num places=0 {
-        $round num = num, places;
-        return num;
+        return `!round num, places`;
     }
 }

@@ -1,4 +1,4 @@
-import func, lexer, parse_code, sys
+import error, func, lexer, parse_code, sys
 
 if len(sys.argv) > 1:
     try:
@@ -18,5 +18,5 @@ else:
 
 tokens = lexer.tokenize(src)
 compiled = parse_code.parse_code(tokens)
-compiled += '\nif "Main" in globals():\n  a = Main()\nelse:\n  print("Main method not found.")\n  exit()'
+compiled += '\nif "Main" in globals():\n  a = Main()\nelse:\n  error.error_code(0)'
 exec(compiled, {})

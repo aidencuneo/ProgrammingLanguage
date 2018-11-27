@@ -1,4 +1,4 @@
-import lexer
+import error, lexer
 
 scope = 0
 
@@ -22,8 +22,16 @@ def parse_code(tokens):
             a = parse_keyword(tokens, a[1], i)
             o += a[0]
             i += a[1]
-        elif a[0] == 'SPECIAL_KEYWORD':
-            a = parse_special_keyword(tokens, a[1], i)
+        elif a[0] == 'IMPORT_STATEMENT':
+            a = parse_import_statement(tokens, i)
+            o += a[0]
+            i += a[1]
+        elif a[0] == 'RAISE_STATEMENT':
+            a = parse_raise_statement(tokens, i)
+            o += a[0]
+            i += a[1]
+        elif a[0] == 'RETURN_STATEMENT':
+            a = parse_return_statement(tokens, i)
             o += a[0]
             i += a[1]
         elif a[0] == 'STATIC_KEYWORD':
@@ -62,15 +70,13 @@ def parse_code(tokens):
 
 
 def parse_variable(tokens, i):
-    if len(tokens[:tokens.index(['LINEFEED', ';'], i)]) < 2:
-        print('Not enough arguments for variable creation. ' +\
-                'Error found at line starting with: "' + tokens[i][1] + '".')
-        exit()
+    if len(tokens[i:tokens.index(['LINEFEED', ';'], i)]) < 3:
+        error.error_code(1) # Fix this to show At argument.
     t = tokens[i][1][1:].split('::')
     n = tokens[i+1][1]
     o = tokens[i+2][1]
     v = tokens[i+3:tokens.index(['LINEFEED', ';'], i+2)+1]
-    if '`' in ''.join([a[1] for a in v]):
+    if 'INCLUDE_STATEMENT' in [a[0] for a in v]:
         v = parse_code(v).replace('\n', '').replace('  ', '')
     else:
         v = ''.join([a[1] for a in v]).replace(';', '')
@@ -88,19 +94,19 @@ def parse_variable(tokens, i):
 def parse_function_call(tokens, i):
     f = tokens[i][1][1:].split('::')
     al = tokens[i+1:tokens.index(['LINEFEED', ';'], i)]
-    if '`' in ''.join([a[1] for a in al]):
+    if 'INCLUDE_STATEMENT' in [a[0] for a in al]:
         al = parse_code(al).replace('\n', '').replace('  ', '')
     else:
         al = ''.join([a[1] for a in al]).replace(';', '')
     nf = ''
     for a in f:
         nf += a + '('
-    return [scope * '  ' + nf + al + ')' * nf.count('(') + '\n', tokens.index(['LINEFEED', ';'], i) - i]
+    return [scope * '  ' + nf + al + ')' * nf.count('(') + '\n', tokens.index(['LINEFEED', ';'], i) - 1 - i]
 
 
 def parse_keyword(tokens, k, i):
     c = tokens[i+1:tokens.index(['SCOPE+1', '{'], i)]
-    if '`' in ''.join([a[1] for a in c]):
+    if 'INCLUDE_STATEMENT' in [a[0] for a in c]:
         c = parse_code(c).replace('\n', '').replace('  ', '')
     else:
         c = ''.join([a[1] for a in c]).replace(';', '')
@@ -109,15 +115,25 @@ def parse_keyword(tokens, k, i):
     return [scope * '  ' + k + c + ':\n', tokens.index(['SCOPE+1', '{'], i) - 1 - i]
 
 
-def parse_special_keyword(tokens, k, i):
+def parse_import_statement(tokens, i):
     al = tokens[i+1:tokens.index(['LINEFEED', ';'], i)]
-    if '`' in ''.join([a[1] for a in al]):
+    al = ''.join([a[1] for a in al]).replace(';', '')
+    return [scope * '  ' + 'import ' + al + '\n', tokens.index(['LINEFEED', ';'], i) - i]
+
+
+def parse_raise_statement(tokens, i):
+    al = tokens[i+1:tokens.index(['LINEFEED', ';'], i)]
+    al = ''.join([a[1] for a in al]).replace(';', '')
+    return [scope * '  ' + 'raise ' + al + '\n', tokens.index(['LINEFEED', ';'], i) - i]
+
+
+def parse_return_statement(tokens, i):
+    al = tokens[i+1:tokens.index(['LINEFEED', ';'], i)]
+    if 'INCLUDE_STATEMENT' in [a[0] for a in al]:
         al = parse_code(al).replace('\n', '').replace('  ', '')
     else:
-        al = ''.join([a[1] + ',' for a in al]).replace(';', '')
-    if al.endswith(','):
-        al = al[:-1]
-    return [scope * '  ' + k + ' ' + al + '\n', tokens.index(['LINEFEED', ';'], i) - i]
+        al = ''.join([a[1] for a in al]).replace(';', '')
+    return [scope * '  ' + 'return ' + al + '\n', tokens.index(['LINEFEED', ';'], i) - i]
 
 
 def parse_function_definer(tokens, i):
@@ -169,7 +185,7 @@ def parse_switch_definer(tokens, i):
 
 def parse_catch_definer(tokens, i):
     c = tokens[i+1:tokens.index(['SCOPE+1', '{'], i)]
-    if '`' in ''.join([a[1] for a in c]):
+    if 'INCLUDE_STATEMENT' in [a[0] for a in c]:
         c = parse_code(c).replace('\n', '').replace('  ', '')
     else:
         c = ''.join([a[1] for a in c]).replace(';', '')
@@ -180,15 +196,15 @@ def parse_if_shorthand(tokens, i):
     c = tokens[1:tokens.index(['KEY', '::'], 1)]
     t = tokens[1+tokens.index(['KEY', '::'], 1):tokens.index(['PIPE', '|'], 1+tokens.index(['KEY', '::'], 1))]
     f = tokens[1+tokens.index(['PIPE', '|'], 1+tokens.index(['KEY', '::'])):tokens.index(['LINEFEED', ';'], 1)]
-    if '`' in ''.join([a[1] for a in c]):
+    if 'INCLUDE_STATEMENT' in [a[0] for a in c]:
         c = parse_code(c).replace('\n', '').replace('  ', '')
     else:
         c = ''.join([a[1] for a in c]).replace(';', '')
-    if '`' in ''.join([a[1] for a in t]):
+    if 'INCLUDE_STATEMENT' in [a[0] for a in t]:
         t = parse_code(t).replace('\n', '').replace('  ', '')
     else:
         t = ''.join([a[1] for a in t]).replace(';', '')
-    if '`' in ''.join([a[1] for a in f]):
+    if 'INCLUDE_STATEMENT' in [a[0] for a in f]:
         f = parse_code(f).replace('\n', '').replace('  ', '')
     else:
         f = ''.join([a[1] for a in f]).replace(';', '')
