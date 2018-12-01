@@ -1,38 +1,39 @@
-**
-  Programming language created by Aiden Blishen Cuneo.
-  First started on: 22/11/18.
-**
+// Programming language created by Aiden Blishen Cuneo.
+// First started on: 22/11/18.
 
 import random, sys;
 
-class Main {
+class Thing {
     fun __init__ self {
-        $self.get_input a = 'Enter file name: ';
-        **$var a;**
+        $self.get_input a = 'Enter '
+        'file '
+        'name '
+        'here: ';
+        //$var a;
         !self.importFile a;
     }
 
     fun get_input self prompt {
         if sys.version_info[0] < 3 {
-            return `!raw_input prompt`;
+            return !raw_input prompt;
         } else {
-            return `!input prompt`;
+            return !input prompt;
         }
     }
 
     fun findFile self fileName {
-        $var FileNotFound = `? sys.version_info[0] < 3 :: IOError | FileNotFoundError`;
+        $var FileNotFound = ? sys.version_info[0] < 3 :: IOError | FileNotFoundError;
         try {
             $open f = fileName;
             !f.close;
-            return True;
+            return true;
         } catch FileNotFound {
-            return False;
+            return false;
         }
     }
 
     fun importFile self fileName {
-        if `!self.findFile fileName` {
+        if !self.findFile fileName {
             !print 'File exists.';
         } else {
             !print "File doesn't exist.";
@@ -40,6 +41,6 @@ class Main {
     }
 
     fun roundNumber self num places=0 {
-        return `!round num, places`;
+        return !round num, places;
     }
 }

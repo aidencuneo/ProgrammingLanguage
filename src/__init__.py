@@ -16,7 +16,9 @@ else:
     print('Input file not given.')
     exit()
 
+error.error_check(src.split('\n'))
+exit()
 tokens = lexer.tokenize(src)
-compiled = parse_code.parse_code(tokens)
-compiled += '\nif "Main" in globals():\n  a = Main()\nelse:\n  error.error_code(0)'
+compiled = parse_code.parse_code()
+compiled += '\nif "Main" in globals():\n  a = Main()\nelse:\n  error.error_code(0, "' + src[-2] + '")'
 exec(compiled, {})

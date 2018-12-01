@@ -1,7 +1,14 @@
-import func, re
+import error, func, re
 
 
-def tokenize(string):
+def tokenize_line(line):
+    l = []
+    for a in line:
+        print(a)
+    return l
+
+
+def tokenize_singular(string):
     src = func.do_split(string)
     l = []
     for a in src:

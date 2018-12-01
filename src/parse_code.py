@@ -63,7 +63,7 @@ def parse_code(tokens):
         elif a[0] == 'OPERATOR':
             o += a[1]
         elif a[0] == 'UNKNOWN':
-            print('Unknown type: "' + a[1] + '" found during lexical analysis.')
+            print('Unknown type: "' + a[1] + '" found.')
             exit()
         i += 1
     return o

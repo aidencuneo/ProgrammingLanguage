@@ -1,3 +1,6 @@
+import textwrap
+
+
 def is_int(i):
     try:
         int(i)
@@ -14,44 +17,26 @@ def is_float(i):
         return False
 
 
-def do_split(s, at=' '):
-    s_quote = False
-    d_quote = False
-    s_brack = False
-    include = False
+def do_split(s):
+    comment = 0
     l = []
     o = ''
     for a in s:
-        if a == '"' and not s_quote:
-            d_quote = not d_quote
+        if a == '/':
+            comment += 1
+        elif 0 < comment < 2 and a != '/':
+            comment -= 1
+        if comment < 2:
             o += a
-        elif a == "'" and not d_quote:
-            s_quote = not s_quote
-            o += a
-        elif a == '[':
-            s_brack = True
-            o += a
-        elif a == ']':
-            s_brack = False
-            o += a
-        elif a == '`':
-            include = not include
-            o += a
-        elif (a == at or a == '\n' or a == '\r' or a == ';')\
-        and not s_quote and not d_quote and not s_brack and not include:
-            if a == ';':
-                o += ';'
-            l.append(o)
+        if a == ';' or a == '\n' or a == '{' or a == '}':
+            l.append(o[:-1])
             o = ''
-        else:
-            o += a
+        if a == '\n':
+            comment = 0
+            o = o[:-1]
     l.append(o)
-    l = list(filter(None, l))
-    nl = []
-    comment = False
-    for a in l:
-        if a == '**' or a.startswith('**') or a.endswith('**'):
-            comment = not comment
-        elif not comment:
-            nl.append(a)
-    return nl
+    l = [textwrap.dedent(a) for a in l]
+    #l = [a for a in l if len(a) > 0]
+    print('Lines: ' + str(len(l)))
+    exit()
+    return l
