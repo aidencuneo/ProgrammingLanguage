@@ -1,19 +1,15 @@
 // Programming language created by Aiden Blishen Cuneo.
 // First started on: 22/11/18.
-// Hey!
-// Hey again!
 
 import random, sys;
 
-class Main {
+class Thing {
     fun __init__ self {
-        // Stuff.
-        $str a = 10;
-        // Making variables here.
         $self.get_input a = 'Enter '
         'file '
         'name '
         'here: ';
+        //$var a;
         !self.importFile a;
     }
 

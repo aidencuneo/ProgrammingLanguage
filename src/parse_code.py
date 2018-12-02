@@ -1,31 +1,11 @@
-import error, func, lexer
+import error, lexer
 
 scope = 0
 
 
-def process(tokens):
-    i = 0
-    l = []
-    while i < len(tokens):
-        a = tokens[i]
-        if a[0] == 'FUNCTION_CALL':
-            a = parse_function_call(tokens, i)
-            l.append(['PRECOMPILED', a[0][:-1]])
-            i += a[1]
-        elif a[0] == 'IF_SHORTHAND':
-            a = parse_if_shorthand(tokens, i)
-            l.append(['PRECOMPILED', a[0]])
-            i += a[1]
-        elif a[0] == 'BOOL':
-            l.append(['BOOL', a[1][0].upper() + a[1][1:]])
-        else:
-            l.append(a)
-        i += 1
-    return l
-
-
 def parse_code(tokens):
     global scope
+    tokens = tokens
     i = 0
     o = ''
     while i < len(tokens):
@@ -70,6 +50,8 @@ def parse_code(tokens):
             a = parse_catch_definer(tokens, i)
             o += a[0]
             i += a[1]
+        elif a[0] == 'INCLUDE_STATEMENT':
+            o += parse_code(lexer.tokenize(a[1][1:-1] + ';'))
         elif a[0] == 'IF_SHORTHAND':
             a = parse_if_shorthand(tokens, i)
             o += a[0]
@@ -80,11 +62,6 @@ def parse_code(tokens):
             scope -= 1
         elif a[0] == 'OPERATOR':
             o += a[1]
-        elif a[0] == 'PRECOMPILED':
-            o += scope * '  ' + a[1]
-            if i+1 < len(tokens):
-                if tokens[i+1][1] == ';':
-                    o += '\n'
         elif a[0] == 'UNKNOWN':
             print('Unknown type: "' + a[1] + '" found.')
             exit()
@@ -93,6 +70,8 @@ def parse_code(tokens):
 
 
 def parse_variable(tokens, i):
+    if len(tokens[i:tokens.index(['LINEFEED', ';'], i)]) < 3:
+        error.error_code(1) # Fix this to show At argument.
     t = tokens[i][1][1:].split('::')
     n = tokens[i+1][1]
     o = tokens[i+2][1]
@@ -114,26 +93,26 @@ def parse_variable(tokens, i):
 
 def parse_function_call(tokens, i):
     f = tokens[i][1][1:].split('::')
-    al = tokens[i+1:func.index_of(tokens, [['LINEFEED', ';'], ['SCOPE+1', '{'], ['KEY', '::']], i)]
-    al = ''.join([a[1] for a in al]).replace(';', '')
+    al = tokens[i+1:tokens.index(['LINEFEED', ';'], i)]
+    if 'INCLUDE_STATEMENT' in [a[0] for a in al]:
+        al = parse_code(al).replace('\n', '').replace('  ', '')
+    else:
+        al = ''.join([a[1] for a in al]).replace(';', '')
     nf = ''
     for a in f:
         nf += a + '('
-    return [scope * '  ' + nf + al + ')' * nf.count('(') + '\n', func.index_of(tokens, [['LINEFEED', ';'], ['SCOPE+1', '{']], i) - 1 - i]
+    return [scope * '  ' + nf + al + ')' * nf.count('(') + '\n', tokens.index(['LINEFEED', ';'], i) - 1 - i]
 
 
 def parse_keyword(tokens, k, i):
-    #print(tokens)
-    #exit()
-    c = tokens[i+1:func.index_of(tokens, [['SCOPE+1', '{'], ['KEY', '::']], i+1)]
-    #print(i, func.index_of(tokens, [['SCOPE+1', '{'], ['KEY', '::']], i+1))
-    #print(c)
-    c = ''.join([a[1] for a in c]).replace(';', '')
+    c = tokens[i+1:tokens.index(['SCOPE+1', '{'], i)]
+    if 'INCLUDE_STATEMENT' in [a[0] for a in c]:
+        c = parse_code(c).replace('\n', '').replace('  ', '')
+    else:
+        c = ''.join([a[1] for a in c]).replace(';', '')
     if len(c) > 0:
         c = ' ' + c
-    o = scope * '  ' + k + c + ':'
-    #print(k + '|' + c)
-    return [o, func.index_of(tokens, [['SCOPE+1', '{'], ['KEY', '::']], i) - 1 - i]
+    return [scope * '  ' + k + c + ':\n', tokens.index(['SCOPE+1', '{'], i) - 1 - i]
 
 
 def parse_import_statement(tokens, i):
@@ -150,7 +129,10 @@ def parse_raise_statement(tokens, i):
 
 def parse_return_statement(tokens, i):
     al = tokens[i+1:tokens.index(['LINEFEED', ';'], i)]
-    al = ''.join([a[1] for a in al]).replace(';', '')
+    if 'INCLUDE_STATEMENT' in [a[0] for a in al]:
+        al = parse_code(al).replace('\n', '').replace('  ', '')
+    else:
+        al = ''.join([a[1] for a in al]).replace(';', '')
     return [scope * '  ' + 'return ' + al + '\n', tokens.index(['LINEFEED', ';'], i) - i]
 
 
@@ -211,10 +193,19 @@ def parse_catch_definer(tokens, i):
 
 
 def parse_if_shorthand(tokens, i):
-    c = tokens[i+1:tokens.index(['KEY', '::'], i)]
-    t = tokens[1+tokens.index(['KEY', '::'], i+1):tokens.index(['PIPE', '|'], 1+tokens.index(['KEY', '::'], i+1))]
-    f = tokens[1+tokens.index(['PIPE', '|'], 1+tokens.index(['KEY', '::'], i+1)):tokens.index(['LINEFEED', ';'], i+2)]
-    c = ''.join([a[1] for a in c]).replace(';', '')
-    t = ''.join([a[1] for a in t]).replace(';', '')
-    f = ''.join([a[1] for a in f]).replace(';', '')
-    return [scope * '  ' + t + ' if ' + c + ' else ' + f + '\n', tokens.index(['LINEFEED', ';'], i) - 1 - i]
+    c = tokens[1:tokens.index(['KEY', '::'], 1)]
+    t = tokens[1+tokens.index(['KEY', '::'], 1):tokens.index(['PIPE', '|'], 1+tokens.index(['KEY', '::'], 1))]
+    f = tokens[1+tokens.index(['PIPE', '|'], 1+tokens.index(['KEY', '::'])):tokens.index(['LINEFEED', ';'], 1)]
+    if 'INCLUDE_STATEMENT' in [a[0] for a in c]:
+        c = parse_code(c).replace('\n', '').replace('  ', '')
+    else:
+        c = ''.join([a[1] for a in c]).replace(';', '')
+    if 'INCLUDE_STATEMENT' in [a[0] for a in t]:
+        t = parse_code(t).replace('\n', '').replace('  ', '')
+    else:
+        t = ''.join([a[1] for a in t]).replace(';', '')
+    if 'INCLUDE_STATEMENT' in [a[0] for a in f]:
+        f = parse_code(f).replace('\n', '').replace('  ', '')
+    else:
+        f = ''.join([a[1] for a in f]).replace(';', '')
+    return [scope * '  ' + t + ' if ' + c + ' else ' + f + '\n', tokens.index(['LINEFEED', ';']) - 1 - i]
