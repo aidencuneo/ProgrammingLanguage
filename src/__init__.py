@@ -17,8 +17,9 @@ else:
     exit()
 
 error.error_check(src.split('\n'))
-exit()
-tokens = lexer.tokenize(src)
-compiled = parse_code.parse_code()
-compiled += '\nif "Main" in globals():\n  a = Main()\nelse:\n  error.error_code(0, "' + src[-2] + '")'
-exec(compiled, {})
+pretokens = lexer.tokenize_file(src)
+tokens = parse_code.process(pretokens)
+s = src.split('\n')
+compiled = parse_code.parse_code(tokens)
+compiled += '\nif "Main" in globals():\n  a = Main()\nelse:\n  error.error_code(0, ' + str(len(s)) + ', ["' + s[len(s)-1] + '", "' + s[len(s)-2] + '", None])'
+exec(compiled, {'error': error})
