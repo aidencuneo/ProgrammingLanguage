@@ -73,12 +73,14 @@ def tokenize_line(line):
             l.append(['STRING', a])
         elif a.startswith('[') and a.endswith(']'):
             l.append(['LIST', a])
-        elif a.startswith('`') and a.endswith('`'):
-            l.append(['INCLUDE_STATEMENT', a])
-        elif re.match("[a-z]", a) or re.match("[A-Z]", a):
+        elif re.match('[a-z]', a) or re.match("[A-Z]", a):
             l.append(['IDENTIFIER', a])
         elif a.startswith('__') and a.endswith('__'):
             l.append(['SPECIAL_IDENTIFIER', a])
+        elif (re.match('[a-z]', a[1:]) or re.match('[A-Z]', a[1:])) and a[0] == '*':
+            l.append(['ARGS_IDENTIFIER', a])
+        elif (re.match('[a-z]', a[2:]) or re.match('[A-Z]', a[2:])) and a[0] + a[1] == '**':
+            l.append(['KWARGS_IDENTIFIER', a])
         else:
             l.append(['UNKNOWN', a])
         if lf:

@@ -113,26 +113,18 @@ def parse_variable(tokens, i):
 
 
 def parse_function_call(tokens, i):
-    f = tokens[i][1][1:].split('::')
+    f = tokens[i][1][1:] + '('
     al = tokens[i+1:func.index_of(tokens, [['LINEFEED', ';'], ['SCOPE+1', '{'], ['KEY', '::']], i)]
     al = ''.join([a[1] for a in al]).replace(';', '')
-    nf = ''
-    for a in f:
-        nf += a + '('
-    return [scope * '  ' + nf + al + ')' * nf.count('(') + '\n', func.index_of(tokens, [['LINEFEED', ';'], ['SCOPE+1', '{']], i) - 1 - i]
+    return [scope * '  ' + f + al + ')' * f.count('(') + '\n', func.index_of(tokens, [['LINEFEED', ';'], ['SCOPE+1', '{'], ['KEY', '::']], i) - 1 - i]
 
 
 def parse_keyword(tokens, k, i):
-    #print(tokens)
-    #exit()
     c = tokens[i+1:func.index_of(tokens, [['SCOPE+1', '{'], ['KEY', '::']], i+1)]
-    #print(i, func.index_of(tokens, [['SCOPE+1', '{'], ['KEY', '::']], i+1))
-    #print(c)
     c = ''.join([a[1] for a in c]).replace(';', '')
     if len(c) > 0:
         c = ' ' + c
     o = scope * '  ' + k + c + ':'
-    #print(k + '|' + c)
     return [o, func.index_of(tokens, [['SCOPE+1', '{'], ['KEY', '::']], i) - 1 - i]
 
 
@@ -161,7 +153,7 @@ def parse_function_definer(tokens, i):
     nal = ''
     for a in al:
         nal += a[1] + ','
-    return scope * '  ' + 'def ' + n + '(' + nal + '):\n'
+    return scope * '  ' + 'def ' + n + '(' + nal[:-1] + '):\n'
 
 
 def parse_class_definer(tokens, i):
@@ -171,7 +163,7 @@ def parse_class_definer(tokens, i):
     nal = ''
     for a in al:
         nal += a[1] + ','
-    return scope * '  ' + 'class ' + n + '(' + nal + '):\n'
+    return scope * '  ' + 'class ' + n + '(' + nal[:-1] + '):\n'
 
 
 def parse_switch_definer(tokens, i):
@@ -217,4 +209,4 @@ def parse_if_shorthand(tokens, i):
     c = ''.join([a[1] for a in c]).replace(';', '')
     t = ''.join([a[1] for a in t]).replace(';', '')
     f = ''.join([a[1] for a in f]).replace(';', '')
-    return [scope * '  ' + t + ' if ' + c + ' else ' + f + '\n', tokens.index(['LINEFEED', ';'], i) - 1 - i]
+    return [scope * '  ' + t + ' if ' + c + ' else ' + f, tokens.index(['LINEFEED', ';'], i) - 1 - i]
