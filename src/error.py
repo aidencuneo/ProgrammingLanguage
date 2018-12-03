@@ -1,4 +1,4 @@
-import func, lexer, textwrap
+import func, lexer, sys, textwrap
 
 
 def error_check(s):
@@ -31,6 +31,8 @@ def error_check(s):
                         if c[2][0] == 'OPERATOR' or c[2][0] == 'INCREMENTAL_OPERATOR':
                             if c[3][0] == 'LINEFEED':
                                 error_code(8, i+1, e_args)
+                        elif c[2][0] == 'LINEFEED':
+                            error_code(8, i+1, e_args)
                         else:
                             error_code(9, i+1, e_args)
                     else:
@@ -44,6 +46,9 @@ def error_check(s):
 
 
 def error_code(code, l, e):
+    print('Error:')
+    print('  At file "' + sys.argv[1] + '":')
+    sys.stdout.write('    ')
     if code == 0:
         print('Expected "Main" method, but found EOF.')
     elif code == 1:
@@ -66,6 +71,11 @@ def error_code(code, l, e):
         print('Variable statement contains invalid operator.')
     else:
         print('Unknown error occurred.')
+    print_error_info(l, e)
+    exit()
+
+
+def print_error_info(l, e):
     m = max([len(str(l)), len(str(l-1)), len(str(l+1))])
     i = [' ' * (m - len(a)) + a for a in [str(l), str(l-1), str(l+1)]]
     if l-1 > 0 and e[1] is not None:
@@ -73,4 +83,17 @@ def error_code(code, l, e):
     print(i[0] + ' > ' + str(e[0]))
     if e[2] is not None:
         print(i[2] + ' | ' + str(e[2]))
+
+
+def custom_error(s):
+    print('Error:')
+    print('  At file "' + sys.argv[1] + '":')
+    print('    ' + s)
     exit()
+
+
+def env(*args):
+    try:
+        exec(*args)
+    except Exception as e:
+        custom_error(str(e))

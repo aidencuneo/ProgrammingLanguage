@@ -22,4 +22,5 @@ tokens = parse_code.process(pretokens)
 s = src.split('\n')
 compiled = parse_code.parse_code(tokens)
 compiled += '\nif "Main" in globals():\n  a = Main(*sys.argv[1:])\nelse:\n  error.error_code(0, ' + str(len(s)) + ', ["' + s[len(s)-1] + '", "' + s[len(s)-2] + '", None])'
-exec(compiled, {'error': error})
+#print(compiled)
+error.env(compiled, {'error': error})

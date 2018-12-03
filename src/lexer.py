@@ -13,8 +13,10 @@ def tokenize_line(line):
             comma = True
         if a.startswith('$'):
             l.append(['VARIABLE', a])
-        elif a in ['if', 'else', 'elif', 'while', 'for']:
+        elif a in ['if', 'else', 'elif', 'while']:
             l.append(['KEYWORD', a])
+        elif a == 'for':
+            l.append(['FOR_LOOP', a])
         elif a == 'import':
             l.append(['IMPORT_STATEMENT', a])
         elif a == 'raise':
@@ -27,10 +29,6 @@ def tokenize_line(line):
             l.append(['FUNCTION_DEFINER', a])
         elif a == 'class':
             l.append(['CLASS_DEFINER', a])
-        elif a == 'switch':
-            l.append(['SWITCH_DEFINER', a])
-        elif a == 'case':
-            l.append(['CASE_DEFINER', a])
         elif a == 'try':
             l.append(['TRY_DEFINER', a])
         elif a == 'catch':
@@ -47,6 +45,8 @@ def tokenize_line(line):
             l.append(['BINARY_OPERATOR', a])
         elif a == '==' or a == '!=' or a == '>' or a == '<' or a == '<=' or a == '>=':
             l.append(['COMPARISON_OPERATOR', a])
+        elif a.startswith('!{') and a.endswith('}'):
+            l.append(['BOOL_REVERSE', a])
         elif a.startswith('!'):
             l.append(['FUNCTION_CALL', a])
         elif a == '{':
