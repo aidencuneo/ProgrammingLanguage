@@ -1,16 +1,22 @@
 import error, func, re
 
+scope_id = 0
+
 
 def tokenize_line(line):
+    global scope_id
     l = []
     for a in line:
-        lf = comma = False
+        lf = comma = fstop = False
         if a.endswith(';') and a != ';':
             a = a[:-1]
             lf = True
         if a.endswith(',') and a != ',':
             a = a[:-1]
             comma = True
+        if a.endswith('.') and a != '.':
+            a = a[:-1]
+            fstop = True
         if a.startswith('$'):
             l.append(['VARIABLE', a])
         elif a in ['if', 'else', 'elif', 'while']:
@@ -50,9 +56,11 @@ def tokenize_line(line):
         elif a.startswith('!'):
             l.append(['FUNCTION_CALL', a])
         elif a == '{':
-            l.append(['SCOPE+1', a])
+            scope_id += 1
+            l.append(['SCOPE+1', a, scope_id])
         elif a == '}':
-            l.append(['SCOPE-1', a])
+            l.append(['SCOPE-1', a, scope_id])
+            scope_id -= 1
         elif a == '(':
             l.append(['SWITCH_BEGIN', a])
         elif a == ')':
@@ -87,6 +95,8 @@ def tokenize_line(line):
             l.append(['LINEFEED', ';'])
         elif comma:
             l.append(['SYMBOL', ','])
+        elif fstop:
+            l.append(['FULL_STOP', '.'])
     return l
 
 

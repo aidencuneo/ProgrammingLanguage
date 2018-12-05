@@ -19,7 +19,7 @@ def is_float(i):
 
 def split_line(s, at=' '):
     comment = 0
-    s_quote = d_quote = s_brack = include = False
+    s_quote = d_quote = s_brack = False
     l = []
     o = ''
     for a in textwrap.dedent(s):
@@ -35,12 +35,10 @@ def split_line(s, at=' '):
             s_brack = True
         elif a == ']':
             s_brack = False
-        elif a == '`':
-            include = not include
         if comment < 2:
             o += a
         if (a == at or a == ';') and not s_quote and not d_quote\
-        and not s_brack and not include and comment < 2:
+        and not s_brack and comment < 2:
             if a == ';':
                 o += ';'
             l.append(o[:-1])

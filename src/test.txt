@@ -3,79 +3,18 @@
 
 import os, random, sys;
 
-$str a = 'hey';
-if 1 < !len a {
-    !print 'HEY!';
-    !print a;
+$dict stats = !dict;
+
+for $int a = 0; a < 1000; a += 1 {
+    $int i = !random.randint 0, 100;
+    $str p = i % 10 * 10;
+    if p in stats { $int stats[p] += 1; }
+    else { $int stats[p] = 1; }
 }
 
-class Main {
-    fun __init__ self *args **kwargs {
-        if 0 < !len args {
-            try {
-                $open f = args[0];
-                if f.name.endswith('.txt') {
-                    $var self.src = !f.read;
-                    !f.close;
-                } else ::
-                    raise 'Invalid file type, must end with extension \'.txt\'.';
-            } catch ? sys.version_info[0] < 3 :: IOError | FileNotFoundError ::
-                raise 'Input file not found.';
-        } else ::
-            raise 'Input file not given.';
-        !self.tokenize_file self.src;
-    }
-
-    fun split_line self s at=' ' {
-        $int comment = 0;
-        $bool s_quote|d_quote|s_brack = false;
-        $list l = [];
-        $str o = '';
-        $str s = !textwrap.dedent s;
-        for $int a = 0; a < !len s; a += 1 {
-            if a == '/' && comment != 2 ::
-                $int comment += 1;
-            elif 0 < comment < 2 && a != '/' ::
-                $int comment -= 1;
-            if a == '"' && !{s_quote} ::
-                $bool d_quote = !{d_quote};
-            elif a == "'" && !{d_quote} ::
-                $bool s_quote = !{s_quote};
-            elif a == '[' ::
-                $bool s_brack = true;
-            elif a == ']' ::
-                $bool s_brack = false;
-            if comment < 2 ::
-                $str o += a;
-            if (a == at || a == ';') && !{s_quote} && !{d_quote}
-            && !{s_brack} && !{include} && comment < 2 {
-                if a == ';' ::
-                    $str o += ';';
-                !l.append o[:-1];
-                $str o = '';
-            }
-            if comment == 2 ::
-                $str o = o[:-1];
-        }
-        !l.append o;
-        $list l = !filter None l;
-        return l;
-    }
-
-    fun tokenize_file self src {
-        $list l = [];
-        $list src_lines = !src.split '\n';
-        for $int a = 0; a < !len src_lines; a += 1 {
-            $list t = !self.tokenize_line !self.split_line src_lines[a];
-            for $int b = 0; b < !len t; b += 1 ::
-                !l.append t[b];
-        }
-        return l;
-    }
-
-    fun tokenize_line self line {
-        $int i = 0;
-        $list l = [];
-        return l;
-    }
+$list b = !sorted stats;
+for $int a = 0; a < !len b; a += 1 {
+    $float p = stats[b[a]] / 1000 * 100;
+    $str r = !round p, 3;
+    !print !str b; + ': ' + r + '%';
 }
