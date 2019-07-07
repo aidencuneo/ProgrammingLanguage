@@ -3,12 +3,21 @@
 
 import os, random, sys;
 
-$str a = 'hey';
-if 1 < !len a {
-    !print 'HEY!';
-    !print a;
-}
+class Main ::
+    fun __init__ self *args **kwargs ::
+        !print 'Hello there.';
 
+##class Main {
+    fun __init__ self *args **kwargs {
+        $str a = 'hey';
+        if 1 < !len a {
+            !print 'Hey!';
+            !print a;
+        }
+    }
+}##
+
+##
 class Main {
     fun __init__ self *args **kwargs {
         if 0 < !len args {
@@ -79,3 +88,4 @@ class Main {
         return l;
     }
 }
+##
