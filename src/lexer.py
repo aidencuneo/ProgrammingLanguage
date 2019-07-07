@@ -6,6 +6,7 @@ scope_id = 0
 
 
 def tokenise_line(line):
+    global scope_id
     l = []
     for a in line:
         lf = comma = fstop = False
@@ -107,5 +108,4 @@ def tokenise_file(src):
         t = tokenise_line(func.split_line(a))
         for b in t:
             l += [b]
-    print(l)
     return l

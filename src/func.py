@@ -63,7 +63,6 @@ def remove_comments(src):
     o = ''
     lc = 0
     bc = 0
-    print(src)
     for a in src:
         if a == '/' and lc < 3:
             lc += 1
@@ -77,6 +76,11 @@ def remove_comments(src):
             lc = 0
         elif a != '#' and bc == 1:
             bc = 0
-        if lc < 1 and bc < 1:
+        elif a == '#' and bc == 2:
+            bc = 3
+        elif a == '#' and bc == 3:
+            bc = 0
+            a = ''
+        if lc < 1 and bc < 1 or a == '\n':
             o += a
     return o

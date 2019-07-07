@@ -1,6 +1,7 @@
 import error
 import func
 import lexer
+import sys
 
 scope = 0
 
@@ -16,10 +17,9 @@ def process(tokens):
             i += b[1]
         elif a[0] == 'FUNCTION_CALL':
             b = parse_function_call(tokens, i)
-            l.append(['PRECOMPILED', b[0][:-1]])
+            l.append(['PRECOMPILED', b[0]])
             i += b[1]
         elif a[0] == 'VARIABLE':
-            #print(tokens[i:])
             b = parse_variable(tokens, i)
             l.append(['PRECOMPILED', b[0][:-1]])
             i += b[1]
@@ -28,10 +28,14 @@ def process(tokens):
                 l.append(['PRECOMPILED', 'and'])
             elif a[1] == '||':
                 l.append(['PRECOMPILED', 'or'])
-        #elif a[0] == 'CLASS_DEFINER':
-        #    b = parse_class_definer(tokens, i)
-        #    l.append(['PRECOMPILED', b[0]])
-        #    i += b[1]
+        elif a[0] == 'CLASS_DEFINER':
+            b = parse_keyword(tokens, 'class', i, True, True)
+            l.append(['PRECOMPILED', b[0]])
+            i += b[1]
+        elif a[0] == 'FUNCTION_DEFINER':
+            b = parse_keyword(tokens, 'def', i, True, True)
+            l.append(['PRECOMPILED', b[0]])
+            i += b[1]
         elif a[0] == 'BOOL_REVERSE':
             l.append(['PRECOMPILED', 'not ' + a[1][2:-1]])
         elif a[0] == 'BOOL':
@@ -74,14 +78,6 @@ def parse_code(tokens):
             i += b[1]
         elif a[0] == 'STATIC_KEYWORD':
             o += scope * '  ' + a[1] + '\n'
-        elif a[0] == 'FUNCTION_DEFINER':
-            b = parse_function_definer(tokens, i)
-            o += b[0]
-            i += b[1]
-        elif a[0] == 'CLASS_DEFINER':
-            b = parse_class_definer(tokens, i)
-            o += b[0]
-            i += b[1]
         elif a[0] == 'TRY_DEFINER':
             o += scope * '  ' + 'try:\n'
         elif a[0] == 'CATCH_DEFINER':
@@ -105,7 +101,7 @@ def parse_code(tokens):
                     o += '\n'
         elif a[0] == 'UNKNOWN':
             print('Unknown type: "' + a[1] + '" found.')
-            exit()
+            sys.exit()
         i += 1
     return o
 
@@ -113,9 +109,9 @@ def parse_code(tokens):
 def create_compound_statement(tokens, i):
     global scope
     s = tokens[i][2]
-    a = 0
+    a = i
     while a < len(tokens):
-        if a > i and len(tokens[a]) > 2 and tokens[a][0] == 'SCOPE-1':
+        if len(tokens[a]) > 2 and tokens[a][0] == 'SCOPE-1':
             if tokens[a][2] == s:
                 break
         a += 1
@@ -150,39 +146,64 @@ def parse_variable(tokens, i):
 
 def parse_function_call(tokens, i):
     f = tokens[i][1][1:] + '('
-    a = 0
+    a = i
     while a < len(tokens):
-        if a > i and tokens[a][0] in ['LINEFEED', 'SCOPE+1', 'COMPOUND_BLOCK']:
+        if tokens[a][0] in ['LINEFEED', 'SCOPE+1', 'COMPOUND_BLOCK'] or tokens[a] == ['SYMBOL', ',']:
             break
         a += 1
     al = ''.join([b[1] for b in process(tokens[i+1:a])])
     return [scope * '  ' + f + al + ')\n', a - i]
 
 
-def parse_keyword(tokens, k, i):
+def parse_keyword(tokens, k, i, forcelf=False, brackets=False):
     global scope
-    c = tokens[i + 1:func.index_of(tokens, [['SCOPE+1', '{'], ['KEY', '::']], i + 1)]
-    c = ''.join([a[1] + ' ' for a in process(c)])
-    a = tokens[i + 1:func.index_of(tokens, [['SCOPE+1', '{'], ['KEY', '::']], i + 1) + 1]
-    j = tokens[func.index_of(tokens, [['SCOPE+1', '{'], ['KEY', '::']], i + 1):]
+    b = i
+    while b < len(tokens):
+        if tokens[b][0] in ['LINEFEED', 'SCOPE+1', 'COMPOUND_BLOCK', 'PRECOMPILED']:
+            break
+        b += 1
+    c = tokens[i + 1:b]
+    n = c[0][1] if c else ''
+    a = tokens[i + 1:b + 1]
+    j = tokens[b:]
+    linefeed = (['KEY', '::'] not in a and ['SCOPE+1', '{'] in a) or forcelf
     if j[0] == ['KEY', '::']:
-        j = j[:j.index(['LINEFEED', ';'])]
+        a = i
+        while a < len(tokens):
+            print(tokens[a])
+            if tokens[a][0] in ['LINEFEED', 'PRECOMPILED']:
+                break
+            a += 1
+        j = j[:a]
     elif j[0] == ['SCOPE+1', '{']:
         j = j[:j.index(['SCOPE-1', '}'])]
-    if len(c) > 0:
-        c = ' ' + c[:-1]
-    if j:
+    elif j[0][0] == 'COMPOUND_BLOCK':
+        j = [j[0]]
+    elif j[0][0] == 'PRECOMPILED':
+        j = [j[0]]
+    if j and j[0] == ['KEY', '::']:
         if j[-1] != ['LINEFEED', ';']:
             j.append(['LINEFEED', ';'])
-    o = scope * '  ' + k + c + ':' + ('\n' if ['KEY', '::'] not in a and ['SCOPE+1', '{'] in a else '')
+    nal = ''.join([a[1] + (',' if brackets else ' ') for a in process(c[1:])])
+    nal = ('(' if brackets else '') + nal[:-1] + (')' if brackets else '')
+    o = scope * '  ' + k + (' ' if n else '') + n + nal + ':' + ('\n' if linefeed else '')
+    for e in range(len(j)):
+        if j[e][0] == 'COMPOUND_BLOCK':
+            j[e][0] = 'PRECOMPILED'
+    if k=='while':print(j)
+    if j[0][0] in ['KEY', 'SCOPE+1']:
+        j = j[1:]
     scope += 1
-    z = parse_code(process(j[1:]))
+    z = parse_code(process(j))
     scope -= 1
-    o += z + ('\n' if ['KEY', '::'] not in a and ['SCOPE+1', '{'] in a else '')
+    o += z + ('\n' if linefeed else '')
+    m = func.index_of(tokens, [['SCOPE+1', '{', scope + 1], ['KEY', '::']], i + 1)
     if j[0] == ['KEY', '::']:
-        m = tokens.index(['LINEFEED', ';'], i + len(c)) - 1
-    elif j[0] == ['SCOPE+1', '{']:
-        m = tokens.index(['SCOPE-1', '}'], i + len(c)) - 1
+        m = tokens.index(['LINEFEED', ';'], i) - 1
+    elif j[0] == ['SCOPE+1', '{', scope + 1]:
+        m = tokens.index(['SCOPE-1', '}'], i) - 1
+    elif j[0][0] == 'COMPOUND_BLOCK':
+        m = 1
     return [o, m]
 
 
@@ -222,7 +243,6 @@ def parse_class_definer(tokens, i):
     d = ''.join([a[1] for a in process(c)])
     a = tokens[i + 1:func.index_of(tokens, [['SCOPE+1', '{'], ['KEY', '::']], i + 1) + 1]
     j = tokens[func.index_of(tokens, [['SCOPE+1', '{'], ['KEY', '::']], i + 1):]
-    print(j)
     if j[0] == ['KEY', '::']:
         if ['LINEFEED', ';'] in j:
             j = j[:j.index(['LINEFEED', ';'])]
@@ -238,7 +258,6 @@ def parse_class_definer(tokens, i):
         a = tokens[i + 1:tokens.index(['SCOPE-1', '}'], i)]
     o = scope * '  ' + scope * '  ' + 'class ' + d[1] + ':\n'
     scope += 1
-    print(j[1:])
     p = parse_code(j[1:])
     scope -= 1
     n = a[0][1]

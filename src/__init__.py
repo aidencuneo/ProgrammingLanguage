@@ -20,15 +20,13 @@ except FileNotFoundError if sys.version_info[0] > 2 else IOError:
 
 s = src.split('\n')
 src = func.remove_comments(src)
-print('COMMENT REMOVAL SUCCESS.')
-error.error_check(src)
-print('ERROR CHECK SUCCESS.')
+error.error_check(s)
 pretokens = lexer.tokenise_file(src)
 print('PRETOKENS GENERATED.')
 tokens = parse_code.process(pretokens)
 print('TOKENS GENERATED.')
 compiled = parse_code.parse_code(tokens)
 print('PROGRAM COMPILED.')
+print(compiled)
 compiled += '\nif "Main" in globals():\n  a = Main(*sys.argv[1:])\nelse:\n  error.error_code(0, ' + str(len(s)) + ', ["' + s[len(s)-1] + '", "' + s[len(s)-2] + '", None])'
-#print(compiled)
 error.env(compiled, {'error': error})

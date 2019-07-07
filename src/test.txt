@@ -1,51 +1,22 @@
 // Programming language created by Aiden Blishen Cuneo.
 // First started on: 22/11/18.
 
+// A line comment looks like this.
+
+##
+A block comment looks like this.
+##
+
 import os, random, sys;
 
-class Main ::
-    fun __init__ self *args **kwargs ::
-        !print 'Hello there.';
-
-##class Main {
-    fun __init__ self *args **kwargs {
-        $str a = 'hey';
-        if 1 < !len a {
-            !print 'Hey!';
-            !print a;
-        }
-    }
-}##
-
-##
+// Every program must have a Main class to run.
 class Main {
     fun __init__ self *args **kwargs {
-        if 0 < !len args {
-            try {
-                $open f = args[0];
-                if f.name.endswith('.txt') {
-                    $var self.src = !f.read;
-                    !f.close;
-                } else ::
-                    raise 'Invalid file type, must end with extension \'.txt\'.';
-            } catch ? sys.version_info[0] < 3 :: IOError | FileNotFoundError ::
-                raise 'Input file not found.';
-        } else ::
-            raise 'Input file not given.';
-        !self.tokenize_file self.src;
+        !print 'Hello there.';
+        !print 'The following keyword is the "while" keyword:';
+        while true {
+            $str i = !input '> ';
+            !print i;
+        }
     }
-
-for $int a = 0; a < 1000; a += 1 {
-    $int i = !random.randint 0, 100;
-    $str p = i % 10 * 10;
-    if p in stats { $int stats[p] += 1; }
-    else { $int stats[p] = 1; }
 }
-
-$list b = !sorted stats;
-for $int a = 0; a < !len b; a += 1 {
-    $float p = stats[b[a]] / 1000 * 100;
-    $str r = !round p, 3;
-    !print !str b; + ': ' + r + '%';
-}
-##

@@ -1,4 +1,7 @@
-import func, lexer, sys, textwrap
+import func
+import lexer
+import sys
+import textwrap
 
 
 def error_check(s):
@@ -25,7 +28,7 @@ def error_check(s):
                         error_code(6, i+1, e_args)
                 else:
                     error_code(5, i+1, e_args)
-            elif c[0][0] == 'VARIABLE':
+            elif c[0][0] == 'VARIABLE' and c[1:]:
                 if c[1][0] == 'IDENTIFIER':
                     if len(c) > 2:
                         if c[2][0] == 'OPERATOR' or c[2][0] == 'INCREMENTAL_OPERATOR':
@@ -41,6 +44,8 @@ def error_check(s):
                     error_code(8, i+1, e_args)
                 else:
                     error_code(7, i+1, e_args)
+            elif c[0][0] == 'VARIABLE':
+                error_code(8, i+1, e_args)
     if scope != 0:
         error_code(2, len(s), [s[len(s)-1], s[len(s)-2], None])
 
