@@ -1,34 +1,26 @@
-import error
-import func
-import lexer
-import parse_code
-import sys
+import error, func, lexer, parse_code, sys
 
-if not sys.argv[1:]:
-    print('Input file not given.')
-    sys.exit()
-try:
-    with open(sys.argv[1]) as f:
-    #if f.name.endswith('.yt'):
+if len(sys.argv) > 1:
+    try:
+        f = open(sys.argv[1])
+        #if f.name.endswith('.yt'):
         src = f.read()
-    #else:
-    #    print('Invalid file type, must end with extension \'.yt\'.')
-    #    exit()
-except FileNotFoundError if sys.version_info[0] > 2 else IOError:
-    print('Input file could not be opened.')
-    sys.exit()
+        f.close()
+        #else:
+        #    print('Invalid file type, must end with extension \'.yt\'.')
+        #    exit()
+    except FileNotFoundError if sys.version_info[0] > 2 else IOError:
+        print('Input file not found.')
+        exit()
+else:
+    print('Input file not given.')
+    exit()
 
-s = src.split('\n')
-src = func.remove_comments(src)
-print('COMMENT REMOVAL SUCCESS.')
-error.error_check(src)
-print('ERROR CHECK SUCCESS.')
-pretokens = lexer.tokenise_file(src)
-print('PRETOKENS GENERATED.')
+error.error_check(src.split('\n'))
+pretokens = lexer.tokenize_file(src)
 tokens = parse_code.process(pretokens)
-print('TOKENS GENERATED.')
+s = src.split('\n')
 compiled = parse_code.parse_code(tokens)
-print('PROGRAM COMPILED.')
-compiled += '\nif "Main" in globals():\n  a = Main(*sys.argv[1:])\nelse:\n  error.error_code(0, ' + str(len(s)) + ', ["' + s[len(s)-1] + '", "' + s[len(s)-2] + '", None])'
-#print(compiled)
+# compiled += '\nif "Main" in globals():\n  a = Main(*sys.argv[1:])\nelse:\n  error.error_code(0, ' + str(len(s)) + ', ["' + s[len(s)-1] + '", "' + s[len(s)-2] + '", None])'
+# print(compiled)
 error.env(compiled, {'error': error})

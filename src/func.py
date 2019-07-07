@@ -1,4 +1,4 @@
-import sys
+import sys, textwrap
 
 
 def is_int(i):
@@ -22,7 +22,7 @@ def split_line(s, at=' '):
     s_quote = d_quote = s_brack = False
     l = []
     o = ''
-    for a in s.strip():
+    for a in textwrap.dedent(s):
         if a == '/' and comment != 2:
             comment += 1
         elif 0 < comment < 2 and a != '/':
@@ -57,26 +57,3 @@ def index_of(s, l, start=0):
             break
         i += 1
     return i
-
-
-def remove_comments(src):
-    o = ''
-    lc = 0
-    bc = 0
-    print(src)
-    for a in src:
-        if a == '/' and lc < 3:
-            lc += 1
-        elif a != '/' and lc == 1:
-            lc = 0
-        elif a == '#' and not bc:
-            bc = 1
-        elif a == '#' and bc == 1:
-            bc = 2
-        elif a == '\n':
-            lc = 0
-        elif a != '#' and bc == 1:
-            bc = 0
-        if lc < 1 and bc < 1:
-            o += a
-    return o

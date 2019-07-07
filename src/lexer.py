@@ -1,11 +1,10 @@
-import error
-import func
-import re
+import error, func, re
 
 scope_id = 0
 
 
-def tokenise_line(line):
+def tokenize_line(line):
+    global scope_id
     l = []
     for a in line:
         lf = comma = fstop = False
@@ -101,11 +100,10 @@ def tokenise_line(line):
     return l
 
 
-def tokenise_file(src):
+def tokenize_file(src):
     l = []
     for a in src.split('\n'):
-        t = tokenise_line(func.split_line(a))
+        t = tokenize_line(func.split_line(a))
         for b in t:
-            l += [b]
-    print(l)
+            l.append(b)
     return l
