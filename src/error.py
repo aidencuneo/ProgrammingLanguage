@@ -8,7 +8,7 @@ def error_check(s):
         a = func.split_line(s[i], ' ')
         a = [b for b in a if b != '']
         if len(a) > 0:
-            c = lexer.tokenize_line(a)
+            c = lexer.tokenise_line(a)
             for b in a:
                 if b == '{':
                     scope += 1
@@ -58,7 +58,7 @@ def error_code(code, l, e):
     elif code == 3:
         print('Return statement requires at least one argument.')
     elif code == 4:
-        print('Can not end a loop that does not exist. (Occurs when number of "}" is greater than number of "{")')
+        print('Can not end a loop that does not exist. (Occurs when number of "}" in a file is greater than number of "{")')
     elif code == 5:
         print('Import statement requires at least one argument.')
     elif code == 6:
