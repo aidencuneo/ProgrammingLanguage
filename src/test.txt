@@ -14,9 +14,18 @@ class Main {
     fun __init__ self *args **kwargs {
         !print 'Hello there.';
         !print 'The following keyword is the "while" keyword:';
-        while true {
-            $str i = !input '> ';
-            !print i;
+        // This shortened if statement works, but only if it has ONE line after it:
+        if 0 < 10 :: !print 'YES';
+        // This while loop format works as well, and it can have multiple lines after it:
+        $int a = 0;
+        while a < 4 {
+            !print 'bam';
+            $str i = !input;
+            $int a += 1;
+        }
+        // If you want to make your code fancy, you can use the multi-line format for one line:
+        if a == 4 {
+            !print 'a is equal to 4';
         }
     }
 }

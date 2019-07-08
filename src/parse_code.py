@@ -2,6 +2,7 @@ import error
 import func
 import lexer
 import sys
+import textwrap
 
 scope = 0
 
@@ -57,7 +58,7 @@ def parse_code(tokens):
     while i < len(tokens):
         a = tokens[i]
         if a[0] == 'KEYWORD':
-            b = parse_keyword(tokens, a[1], i)
+            b = parse_keyword(tokens, a[1], i, True)
             o += b[0]
             i += b[1]
         elif a[0] == 'FOR_LOOP':
@@ -95,9 +96,9 @@ def parse_code(tokens):
         elif a[0] == 'OPERATOR':
             o += a[1]
         elif a[0] == 'PRECOMPILED':
-            o += a[1]
-            if i+1 < len(tokens):
-                if tokens[i+1][1] == ';':
+            o += scope * '  ' + textwrap.dedent(a[1])
+            if i + 1 < len(tokens):
+                if tokens[i + 1][1] == ';':
                     o += '\n'
         elif a[0] == 'UNKNOWN':
             print('Unknown type: "' + a[1] + '" found.')
@@ -130,7 +131,7 @@ def parse_variable(tokens, i):
         v = tokens[i + 3:tokens.index(['LINEFEED', ';'], i + 2) + 1]
     else:
         v = tokens[i + 3:-1]
-    v = ''.join([a[1] for a in process(v)]).replace(';', '')
+    v = ''.join([a[1].strip() for a in process(v)]).replace(';', '')
     nt = ''
     if o == '=' and len(n) > 1:
         nn = ''
@@ -159,51 +160,51 @@ def parse_keyword(tokens, k, i, forcelf=False, brackets=False):
     global scope
     b = i
     while b < len(tokens):
-        if tokens[b][0] in ['LINEFEED', 'SCOPE+1', 'COMPOUND_BLOCK', 'PRECOMPILED']:
+        if tokens[b][0] in ['SCOPE+1', 'COMPOUND_BLOCK', 'PRECOMPILED', 'KEY']:
             break
         b += 1
     c = tokens[i + 1:b]
     n = c[0][1] if c else ''
     a = tokens[i + 1:b + 1]
     j = tokens[b:]
-    linefeed = (['KEY', '::'] not in a and ['SCOPE+1', '{'] in a) or forcelf
+    linefeed = (['KEY', '::'] not in a and ['SCOPE+1', '{', scope + 1] in a) or forcelf
     if j[0] == ['KEY', '::']:
-        a = i
+        a = b
         while a < len(tokens):
-            print(tokens[a])
             if tokens[a][0] in ['LINEFEED', 'PRECOMPILED']:
                 break
             a += 1
-        j = j[:a]
-    elif j[0] == ['SCOPE+1', '{']:
-        j = j[:j.index(['SCOPE-1', '}'])]
+        j = tokens[b:a + 1]
+    elif j[0] == ['SCOPE+1', '{', scope + 1]:
+        j = j[:j.index(['SCOPE-1', '}', scope + 1])]
     elif j[0][0] == 'COMPOUND_BLOCK':
-        j = [j[0]]
+        j = ['PRECOMPILED', j[0][1]]
     elif j[0][0] == 'PRECOMPILED':
         j = [j[0]]
-    if j and j[0] == ['KEY', '::']:
+    if j[0] == ['KEY', '::']:
         if j[-1] != ['LINEFEED', ';']:
             j.append(['LINEFEED', ';'])
     nal = ''.join([a[1] + (',' if brackets else ' ') for a in process(c[1:])])
     nal = ('(' if brackets else '') + nal[:-1] + (')' if brackets else '')
     o = scope * '  ' + k + (' ' if n else '') + n + nal + ':' + ('\n' if linefeed else '')
-    for e in range(len(j)):
-        if j[e][0] == 'COMPOUND_BLOCK':
-            j[e][0] = 'PRECOMPILED'
-    if k=='while':print(j)
-    if j[0][0] in ['KEY', 'SCOPE+1']:
-        j = j[1:]
     scope += 1
-    z = parse_code(process(j))
+    z = parse_code(process(j[1:] if j[0][0] in ['KEY', 'SCOPE+1'] else j))
     scope -= 1
+    if z.endswith('\n'):
+        z = z[:-1]
     o += z + ('\n' if linefeed else '')
-    m = func.index_of(tokens, [['SCOPE+1', '{', scope + 1], ['KEY', '::']], i + 1)
+    m = 1
     if j[0] == ['KEY', '::']:
-        m = tokens.index(['LINEFEED', ';'], i) - 1
+        m = len(j) - 1
     elif j[0] == ['SCOPE+1', '{', scope + 1]:
-        m = tokens.index(['SCOPE-1', '}'], i) - 1
-    elif j[0][0] == 'COMPOUND_BLOCK':
-        m = 1
+        m = len(j) - 1
+    elif j[0][0] == 'PRECOMPILED':
+        a = 0
+        while a < len(tokens):
+            if tokens[a][0] != 'PRECOMPILED':
+                break
+            a += 1
+        m = a
     return [o, m]
 
 
