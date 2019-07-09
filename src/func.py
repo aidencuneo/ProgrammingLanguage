@@ -50,6 +50,14 @@ def split_line(s, at=' '):
     return l
 
 
+'''
+MAKE NEW LINE SPLITTER.
+
+def split_line(s):
+    pass
+'''
+
+
 def index_of(s, l, start=0):
     i = start
     while i < len(s):
