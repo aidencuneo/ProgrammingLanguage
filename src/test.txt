@@ -7,9 +7,11 @@
 A block comment looks like this.
 ##
 
-import os, random, sys;
+import os,random,sys;
 
 !print 'hey';
 
 // Every program must have a Main class to run.
-class Main { }
+class Main {}
+
+!bam;;

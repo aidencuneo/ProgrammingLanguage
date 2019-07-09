@@ -1,6 +1,3 @@
-import sys
-
-
 def is_int(i):
     try:
         int(i)
@@ -15,47 +12,6 @@ def is_float(i):
         return True
     except ValueError:
         return False
-
-
-def split_line(s, at=' '):
-    comment = 0
-    s_quote = d_quote = s_brack = False
-    l = []
-    o = ''
-    for a in s.strip():
-        if a == '/' and comment != 2:
-            comment += 1
-        elif 0 < comment < 2 and a != '/':
-            comment -= 1
-        if a == '"' and not s_quote:
-            d_quote = not d_quote
-        elif a == "'" and not d_quote:
-            s_quote = not s_quote
-        elif a == '[':
-            s_brack = True
-        elif a == ']':
-            s_brack = False
-        if comment < 2:
-            o += a
-        if (a == at or a == ';') and not s_quote and not d_quote\
-        and not s_brack and comment < 2:
-            if a == ';':
-                o += ';'
-            l.append(o[:-1])
-            o = ''
-        if comment == 2:
-            o = o[:-1]
-    l.append(o)
-    l = list(filter(None, l))
-    return l
-
-
-'''
-MAKE NEW LINE SPLITTER.
-
-def split_line(s):
-    pass
-'''
 
 
 def index_of(s, l, start=0):

@@ -1,24 +1,24 @@
 import error
 import func
 import re
+import string
+import sys
 
+alphabet = string.letters if sys.version_info[0] < 3 else string.ascii_letters
+digits = string.digits
+symbols = string.punctuation
+whitespace = string.whitespace
 scope_id = 0
 
 
-def tokenise_line(line):
+def tokenise(src):
     global scope_id
     l = []
-    for a in line:
-        lf = comma = fstop = False
+    for a in src:
+        lf = False
         if a.endswith(';') and a != ';':
             a = a[:-1]
             lf = True
-        if a.endswith(',') and a != ',':
-            a = a[:-1]
-            comma = True
-        if a.endswith('.') and a != '.':
-            a = a[:-1]
-            fstop = True
         if a.startswith('$'):
             l.append(['VARIABLE', a])
         elif a in ['if', 'else', 'elif', 'while']:
@@ -63,16 +63,14 @@ def tokenise_line(line):
         elif a == '}':
             l.append(['SCOPE-1', a, scope_id])
             scope_id -= 1
-        elif a == '(':
-            l.append(['SWITCH_BEGIN', a])
-        elif a == ')':
-            l.append(['SWITCH_END', a])
         elif a == '**':
             l.append(['COMMENT_DEFINER', a])
         elif a == '::':
             l.append(['KEY', a])
         elif a == ';':
             l.append(['LINEFEED', ';'])
+        elif a in symbols:
+            l.append(['SYMBOL', a])
         elif func.is_int(a):
             l.append(['INTEGER', a])
         elif func.is_float(a):
@@ -83,7 +81,7 @@ def tokenise_line(line):
             l.append(['STRING', a])
         elif a.startswith('[') and a.endswith(']'):
             l.append(['LIST', a])
-        elif re.match('[a-z]', a) or re.match("[A-Z]", a):
+        elif re.match('[a-z]', a) or re.match('[A-Z]', a):
             l.append(['IDENTIFIER', a])
         elif a.startswith('__') and a.endswith('__'):
             l.append(['SPECIAL_IDENTIFIER', a])
@@ -95,17 +93,37 @@ def tokenise_line(line):
             l.append(['UNKNOWN', a])
         if lf:
             l.append(['LINEFEED', ';'])
-        elif comma:
-            l.append(['SYMBOL', ','])
-        elif fstop:
-            l.append(['FULL_STOP', '.'])
     return l
 
 
-def tokenise_file(src):
+def split_src(s):
+    sq = False
+    dq = False
     l = []
-    for a in src.split('\n'):
-        t = tokenise_line(func.split_line(a))
-        for b in t:
-            l += [b]
+    o = ''
+    p = ''
+    t = ''
+    for a in s.strip():
+        q = p
+        if a in alphabet:
+            p = 'A'
+        elif a in digits:
+            p = 'D'
+        elif a in symbols:
+            p = 'S'
+        elif a in whitespace:
+            p = 'W'
+        con = q != p and p != 'W' or p == 'S'\
+            and not (sq or dq)
+        if con:
+            l.append(o.strip())
+            o = ''
+        o += a
+        if a == "'":
+            sq = not sq
+        elif a == '"':
+            dq = not dq
+        t = a
+    l.append(o)
+    l = list(filter(None, l))
     return l

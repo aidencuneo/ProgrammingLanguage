@@ -8,7 +8,7 @@ def error_check(s):
     scope = 0
     for i in range(len(s)):
         e_args = [s[i], s[i-1] if i-1 >= 0 else None, s[i+1] if i+1 < len(s) else None]
-        a = func.split_line(s[i], ' ')
+        a = func.split_line(s[i])
         a = [b for b in a if b != '']
         if len(a) > 0:
             c = lexer.tokenise_line(a)
