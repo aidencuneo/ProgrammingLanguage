@@ -1,3 +1,10 @@
+'''
+
+Programming language created by Aiden Blishen Cuneo.
+First started on: 22/11/18.
+
+'''
+
 import error
 import func
 import lexer

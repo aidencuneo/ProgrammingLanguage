@@ -25,16 +25,8 @@ def tokenise(src):
             l.append(['KEYWORD', a])
         elif a == 'for':
             l.append(['FOR_LOOP', a])
-        elif a == 'import':
-            l.append(['IMPORT_STATEMENT', a])
-        elif a == 'raise':
-            l.append(['RAISE_STATEMENT', a])
-        elif a == 'return':
-            l.append(['RETURN_STATEMENT', a])
-        elif a in ['pass', 'break']:
-            l.append(['STATIC_KEYWORD', a])
-        elif a == 'fun':
-            l.append(['FUNCTION_DEFINER', a])
+        elif a == 'include':
+            l.append(['INCLUDE_STATEMENT', a])
         elif a == 'class':
             l.append(['CLASS_DEFINER', a])
         elif a == 'try':
@@ -55,7 +47,7 @@ def tokenise(src):
             l.append(['COMPARISON_OPERATOR', a])
         elif a.startswith('!{') and a.endswith('}'):
             l.append(['BOOL_REVERSE', a])
-        elif a.startswith('!'):
+        elif a == '!':
             l.append(['FUNCTION_CALL', a])
         elif a == '{':
             scope_id += 1
@@ -63,10 +55,6 @@ def tokenise(src):
         elif a == '}':
             l.append(['SCOPE-1', a, scope_id])
             scope_id -= 1
-        elif a == '**':
-            l.append(['COMMENT_DEFINER', a])
-        elif a == '::':
-            l.append(['KEY', a])
         elif a == ';':
             l.append(['LINEFEED', ';'])
         elif a in symbols:
@@ -113,17 +101,58 @@ def split_src(s):
             p = 'S'
         elif a in whitespace:
             p = 'W'
-        con = q != p and p != 'W' or p == 'S'\
+        con = (q != p and p != 'W' or p == 'S')\
             and not (sq or dq)
         if con:
             l.append(o.strip())
             o = ''
-        o += a
         if a == "'":
             sq = not sq
         elif a == '"':
             dq = not dq
+        o += a
         t = a
     l.append(o)
     l = list(filter(None, l))
-    return l
+    k = []
+    pair = []
+    for a in l:
+        pair.append(a)
+        if pair[1:]:
+            if pair[0] == pair[1] == '&':
+                del k[-1]
+                k.append('&&')
+            elif pair[0] == pair[1] == '|':
+                del k[-1]
+                k.append('||')
+            elif pair[0] == pair[1] == ';':
+                del k[-1]
+                k.append(';')
+            elif pair[0] == pair[1] == '+':
+                del k[-1]
+                k += ['+=', '1']
+            elif pair[0] == pair[1] == '-':
+                del k[-1]
+                k += ['-=', '1']
+            elif pair[1] == '=':
+                if pair[0] == '+':
+                    del k[-1]
+                    k.append('+=')
+                elif pair[0] == '-':
+                    del k[-1]
+                    k.append('-=')
+                elif pair[0] == '*':
+                    del k[-1]
+                    k.append('*=')
+                elif pair[0] == '/':
+                    del k[-1]
+                    k.append('/=')
+                elif pair[0] == '=':
+                    del k[-1]
+                    k.append('==')
+            else:
+                k.append(a)
+            del pair[0]
+        else:
+            k.append(a)
+    return k

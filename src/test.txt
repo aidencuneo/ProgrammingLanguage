@@ -1,17 +1,20 @@
-// Programming language created by Aiden Blishen Cuneo.
-// First started on: 22/11/18.
-
 // A line comment looks like this.
 
 ##
 A block comment looks like this.
 ##
 
-import os,random,sys;
+include os,random,sys;
 
-!print 'hey';
+$int i;
+i = 0;
+i += 1;
+i++;
+i *= 2;
+i--;
 
-// Every program must have a Main class to run.
-class Main {}
+!print i;
 
-!bam;;
+!print "hey";
+fun main;
+bam;
