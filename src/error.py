@@ -1,104 +1,103 @@
 import func
 import lexer
+import os
 import sys
 import textwrap
 
 
-def error_check(s):
+def error_check(pretokens):
     scope = 0
-    for i in range(len(s)):
-        e_args = [s[i], s[i-1] if i-1 >= 0 else None, s[i+1] if i+1 < len(s) else None]
-        a = func.split_line(s[i])
-        a = [b for b in a if b != '']
-        if len(a) > 0:
-            c = lexer.tokenise_line(a)
-            for b in a:
-                if b == '{':
-                    scope += 1
-                elif b == '}':
-                    scope -= 1
-                if scope < 0:
-                    error_code(4, i+1, e_args)
-            if c[0][0] == 'RETURN_STATEMENT':
-                if c[1][0] == 'LINEFEED':
-                    error_code(3, i+1, e_args)
-            elif c[0][0] == 'IMPORT_STATEMENT':
-                if c[1][0] != 'LINEFEED':
-                    if c[1][0] != 'IDENTIFIER':
-                        error_code(6, i+1, e_args)
-                else:
-                    error_code(5, i+1, e_args)
-            elif c[0][0] == 'VARIABLE' and c[1:]:
-                if c[1][0] == 'IDENTIFIER':
-                    if len(c) > 2:
-                        if c[2][0] == 'OPERATOR' or c[2][0] == 'INCREMENTAL_OPERATOR':
-                            if c[3][0] == 'LINEFEED':
-                                error_code(8, i+1, e_args)
-                        elif c[2][0] == 'LINEFEED':
-                            error_code(8, i+1, e_args)
-                        else:
-                            error_code(9, i+1, e_args)
-                    else:
-                        error_code(8, i+1, e_args)
-                elif c[1][0] == 'LINEFEED':
-                    error_code(8, i+1, e_args)
-                else:
-                    error_code(7, i+1, e_args)
-            elif c[0][0] == 'VARIABLE':
-                error_code(8, i+1, e_args)
-    if scope != 0:
-        error_code(2, len(s), [s[len(s)-1], s[len(s)-2], None])
+    tokens = lexer.tokenise(pretokens)
+    trees = []
+    ct = []
+    for t in tokens:
+        ct.append(t)
+        if t[1] == ';':
+            trees.append(ct)
+            ct = []
+    for t in trees:
+        print(t)
+        if t[1:]:
+            if t[0][0] == 'INCLUDE_STATEMENT':
+                if t[1][1] == ';':
+                    error_code(5, t[0][1] + ';')
+                if t[1][0] != 'STRING':
+                    error_code(10, t[0][1] + ' ' + t[1][1])
+            elif t[0][0] == 'FUNCTION_CALL':
+                if t[1][0] != 'IDENTIFIER':
+                    error_code(11, t[0][1] + ' ' + t[1][1])
+                for a in t[2:-1]:
+                    if a[0] not in ['INTEGER', 'STRING', 'IDENTIFIER', 'OPERATOR']:
+                        error_code(12, ' '.join([b[1] for b in t[:-1]]) + ';')
+            elif t[0][0] == 'VARIABLE':
+                if t[1][0] != 'IDENTIFIER':
+                    error_code(1, t[0][1] + t[1][1])
+                if t[2:]:
+                    if t[2][0] != 'IDENTIFIER':
+                        error_code(6, t[0][1] + t[1][1] + ' ' + t[2][1])
+            elif t[0][0] == 'IDENTIFIER':
+                if t[1][0] not in ['INCREMENTAL_OPERATOR', 'OPERATOR', 'LINEFEED']:
+                    error_code(8, t[0][1] + ' ' + t[1][1])
+                if t[1][0] in ['INCREMENTAL_OPERATOR', 'OPERATOR']:
+                    if t[2][0] not in ['INTEGER', 'STRING', 'IDENTIFIER', 'FUNCTION_CALL']:
+                        error_code(13, t[0][1] + ' ' + t[1][1])
+            elif t[0][0] == 'FUNCTION_DEFINER':
+                if t[1][0] != 'IDENTIFIER':
+                    error_code(14, t[0][1] + ' ' + t[1][1])
 
 
-def error_code(code, l, e):
-    print('Error:')
-    print('  At file "' + sys.argv[1] + '":')
-    sys.stdout.write('    ')
-    if code == 0:
-        print('Expected "Main" method, but found EOF.')
-    elif code == 1:
-        print('Not enough arguments for variable creation.')
-    elif code == 2:
-        print('EOF without completed scope.')
-    elif code == 3:
-        print('Return statement requires at least one argument.')
-    elif code == 4:
-        print('Can not end a loop that does not exist. (Occurs when number of "}" in a file is greater than number of "{")')
-    elif code == 5:
-        print('Import statement requires at least one argument.')
-    elif code == 6:
-        print('Invalid type to import.')
-    elif code == 7:
-        print('Invalid name for variable.')
-    elif code == 8:
-        print('Variable statement incomplete. Requires: name, operator, value. Optional: type.')
-    elif code == 9:
-        print('Variable statement contains invalid operator.')
+def error_code(c, loc):
+    codes = [
+        # 0:
+        'Expected "Main" method, but found EOF',
+        # 1:
+        'Invalid variable type',
+        # 2:
+        'EOF without completed scope',
+        # 3:
+        'Return statement requires at least one arguments',
+        # 4:
+        'Can not end a loop that does not exist (occurs when number of "}" in a file is greater than number of "{")',
+        # 5:
+        'Include statement requires at least one argument',
+        # 6:
+        'Invalid variable name',
+        # 7:
+        'Invalid name for variable',
+        # 8:
+        'Invalid type after an identifier',
+        # 9:
+        'Variable statement contains invalid operator',
+        # 10:
+        'Include statement argument must be a STRING',
+        # 11:
+        'Invalid function name to call',
+        # 12:
+        'Invalid type in function arguments',
+        # 13:
+        'Missing value after an operator',
+        # 14:
+        'Invalid function name to define',
+    ]
+    s = 'Unknown error occurred'
+    if 0 <= c < len(codes):
+        s = codes[c] if codes[c] else s
+    call_error(s, loc)
+
+
+def call_error(e, loc):
+    print('ERROR:')
+    print('  At file "' + os.path.abspath(sys.argv[1]) + '":')
+    if loc:
+        print('    -> ' + loc)
+        print('    :: ' + e)
     else:
-        print('Unknown error occurred.')
-    print_error_info(l, e)
-    exit()
-
-
-def print_error_info(l, e):
-    m = max([len(str(l)), len(str(l-1)), len(str(l+1))])
-    i = [' ' * (m - len(a)) + a for a in [str(l), str(l-1), str(l+1)]]
-    if l-1 > 0 and e[1] is not None:
-        print(i[1] + ' | ' + str(e[1]))
-    print(i[0] + ' > ' + str(e[0]))
-    if e[2] is not None:
-        print(i[2] + ' | ' + str(e[2]))
-
-
-def custom_error(s):
-    print('Error:')
-    print('  At file "' + sys.argv[1] + '":')
-    print('    ' + s)
-    exit()
+        print('    <exception>: ' + e)
+    sys.exit()
 
 
 def env(*args):
     try:
         exec(*args)
-    except Exception as e:
-        custom_error(str(e))
+    except BaseException as e:
+        call_error(str(e))

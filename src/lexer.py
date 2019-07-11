@@ -14,6 +14,8 @@ scope_id = 0
 def tokenise(src):
     global scope_id
     l = []
+    if isinstance(src, str):
+        src = split_src(src)
     for a in src:
         lf = False
         if a.endswith(';') and a != ';':
@@ -29,10 +31,14 @@ def tokenise(src):
             l.append(['INCLUDE_STATEMENT', a])
         elif a == 'class':
             l.append(['CLASS_DEFINER', a])
+        elif a == 'fun':
+            l.append(['FUNCTION_DEFINER', a])
         elif a == 'try':
             l.append(['TRY_DEFINER', a])
         elif a == 'catch':
             l.append(['CATCH_DEFINER', a])
+        elif a == 'do':
+            l.append(['FUNCTION_CALL', a])
         elif a == '?':
             l.append(['IF_SHORTHAND', a])
         elif a == '|':
@@ -45,10 +51,8 @@ def tokenise(src):
             l.append(['BINARY_OPERATOR', a])
         elif a == '==' or a == '!=' or a == '>' or a == '<' or a == '<=' or a == '>=':
             l.append(['COMPARISON_OPERATOR', a])
-        elif a.startswith('!{') and a.endswith('}'):
-            l.append(['BOOL_REVERSE', a])
         elif a == '!':
-            l.append(['FUNCTION_CALL', a])
+            l.append(['BOOL_REVERSE', a])
         elif a == '{':
             scope_id += 1
             l.append(['SCOPE+1', a, scope_id])
@@ -150,6 +154,8 @@ def split_src(s):
                 elif pair[0] == '=':
                     del k[-1]
                     k.append('==')
+                else:
+                    k.append(a)
             else:
                 k.append(a)
             del pair[0]

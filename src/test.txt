@@ -4,7 +4,9 @@
 A block comment looks like this.
 ##
 
-include os,random,sys;
+include "newfile.txt";
+
+$invalidvartype aiden;
 
 $int i;
 i = 0;
@@ -13,8 +15,12 @@ i++;
 i *= 2;
 i--;
 
-!print i;
+do print i + 1;
+do aiden;
+do print "hey";
 
-!print "hey";
 fun main;
-bam;
+
+i;
+
+i = do main, + 1;
