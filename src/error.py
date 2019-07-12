@@ -12,7 +12,7 @@ def error_check(pretokens):
     ct = []
     for t in tokens:
         ct.append(t)
-        if t[1] == ';':
+        if t[1] in [';', '{', '}']:
             trees.append(ct)
             ct = []
     for t in trees:
@@ -21,8 +21,12 @@ def error_check(pretokens):
             if t[0][0] == 'INCLUDE_STATEMENT':
                 if t[1][1] == ';':
                     error_code(5, t[0][1] + ';')
-                if t[1][0] != 'STRING':
-                    error_code(10, t[0][1] + ' ' + t[1][1])
+                elif t[1][0] != 'STRING':
+                    error_code(10, t[0][1] + ';')
+                last = t[1]
+                for a in t[1:]:
+                    if t[1][0] == 'IDENTIFIER':
+                        error_code(10, t[0][1] + ' ' + t[1][1])
             elif t[0][0] == 'FUNCTION_CALL':
                 if t[1][0] != 'IDENTIFIER':
                     error_code(11, t[0][1] + ' ' + t[1][1])
@@ -44,6 +48,19 @@ def error_check(pretokens):
             elif t[0][0] == 'FUNCTION_DEFINER':
                 if t[1][0] != 'IDENTIFIER':
                     error_code(14, t[0][1] + ' ' + t[1][1])
+                last = t[1]
+                for a in t[2:]:
+                    if a[0] not in ['IDENTIFIER', 'SCOPE+1', 'OPERATOR', 'INTEGER', 'STRING']\
+                        or a[0] == 'OPERATOR' and a[1] != '=':
+                        error_code(15, ' '.join([b[1] for b in t]))
+                    if last[0] == 'IDENTIFIER':
+                        if a[0] not in ['IDENTIFIER', 'SCOPE+1', 'OPERATOR']:
+                            print(2)
+                            error_code(15, ' '.join([b[1] for b in t]))
+                    if last[0] == 'OPERATOR':
+                        if a[0] not in ['IDENTIFIER', 'INTEGER', 'STRING']:
+                            error_code(15, ' '.join([b[1] for b in t]))
+                    last = a
 
 
 def error_code(c, loc):
@@ -69,7 +86,7 @@ def error_code(c, loc):
         # 9:
         'Variable statement contains invalid operator',
         # 10:
-        'Include statement argument must be a STRING',
+        'Include statement arguments must be of type string',
         # 11:
         'Invalid function name to call',
         # 12:
@@ -78,8 +95,10 @@ def error_code(c, loc):
         'Missing value after an operator',
         # 14:
         'Invalid function name to define',
+        # 15:
+        'Invalid syntax for function arguments',
     ]
-    s = 'Unknown error occurred'
+    s = 'Invalid syntax'
     if 0 <= c < len(codes):
         s = codes[c] if codes[c] else s
     call_error(s, loc)

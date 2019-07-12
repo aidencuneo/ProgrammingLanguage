@@ -28,7 +28,7 @@ def tokenise(src):
         elif a == 'for':
             l.append(['FOR_LOOP', a])
         elif a == 'include':
-            l.append(['INCLUDE_STATEMENT', a])
+            l.append(['INCLUDE', a])
         elif a == 'class':
             l.append(['CLASS_DEFINER', a])
         elif a == 'fun':
@@ -39,6 +39,8 @@ def tokenise(src):
             l.append(['CATCH_DEFINER', a])
         elif a == 'do':
             l.append(['FUNCTION_CALL', a])
+        elif a == 'return':
+            l.append(['RETURN', a])
         elif a == '?':
             l.append(['IF_SHORTHAND', a])
         elif a == '|':
@@ -71,8 +73,6 @@ def tokenise(src):
             l.append(['BOOL', a])
         elif (a.startswith('"') and a.endswith('"')) or (a.startswith("'") and a.endswith("'")):
             l.append(['STRING', a])
-        elif a.startswith('[') and a.endswith(']'):
-            l.append(['LIST', a])
         elif re.match('[a-z]', a) or re.match('[A-Z]', a):
             l.append(['IDENTIFIER', a])
         elif a.startswith('__') and a.endswith('__'):
