@@ -4,7 +4,7 @@
 A block comment looks like this.
 ##
 
-include "newfile.txt", 'test.txt',;
+include "newfile.txt" 'test.txt' "bam";
 
 $invalidvartype aiden;
 
@@ -15,7 +15,7 @@ i++;
 i *= 2;
 i--;
 
-do print i + 1;
+do print do str i + 1, + " aiden";
 do aiden;
 do print "hey";
 

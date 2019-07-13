@@ -18,20 +18,20 @@ def error_check(pretokens):
     for t in trees:
         print(t)
         if t[1:]:
-            if t[0][0] == 'INCLUDE_STATEMENT':
+            if t[0][0] == 'INCLUDE':
                 if t[1][1] == ';':
                     error_code(5, t[0][1] + ';')
-                elif t[1][0] != 'STRING':
+                if t[1][0] != 'STRING':
                     error_code(10, t[0][1] + ';')
-                last = t[1]
-                for a in t[1:]:
-                    if t[1][0] == 'IDENTIFIER':
-                        error_code(10, t[0][1] + ' ' + t[1][1])
+                for a in t[1:-1]:
+                    if a[0] != 'STRING':
+                        error_code(10, ' '.join([b[1] for b in t[:-1]]) + ';')
             elif t[0][0] == 'FUNCTION_CALL':
-                if t[1][0] != 'IDENTIFIER':
+                if t[1][0] not in ['IDENTIFIER']:
                     error_code(11, t[0][1] + ' ' + t[1][1])
                 for a in t[2:-1]:
-                    if a[0] not in ['INTEGER', 'STRING', 'IDENTIFIER', 'OPERATOR']:
+                    if a[0] not in ['INTEGER', 'STRING', 'IDENTIFIER', 'OPERATOR', 'FUNCTION_CALL']\
+                        and a[1] != ',':
                         error_code(12, ' '.join([b[1] for b in t[:-1]]) + ';')
             elif t[0][0] == 'VARIABLE':
                 if t[1][0] != 'IDENTIFIER':
@@ -51,7 +51,7 @@ def error_check(pretokens):
                 last = t[1]
                 for a in t[2:]:
                     if a[0] not in ['IDENTIFIER', 'SCOPE+1', 'OPERATOR', 'INTEGER', 'STRING']\
-                        or a[0] == 'OPERATOR' and a[1] != '=':
+                        or (a[0] == 'OPERATOR' and a[1] != '='):
                         error_code(15, ' '.join([b[1] for b in t]))
                     if last[0] == 'IDENTIFIER':
                         if a[0] not in ['IDENTIFIER', 'SCOPE+1', 'OPERATOR']:
