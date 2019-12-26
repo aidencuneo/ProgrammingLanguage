@@ -16,7 +16,6 @@ def error_check(pretokens):
             trees.append(ct)
             ct = []
     for t in trees:
-        print(t)
         if t[1:]:
             if t[0][0] == 'INCLUDE':
                 if t[1][1] == ';':
@@ -49,6 +48,8 @@ def error_check(pretokens):
                 if t[1][0] != 'IDENTIFIER':
                     error_code(14, t[0][1] + ' ' + t[1][1])
                 last = t[1]
+                if t[2][0] not in ['IDENTIFIER', 'SCOPE+1']:
+                    error_code(15, ' '.join([b[1] for b in t]))
                 for a in t[2:]:
                     if a[0] not in ['IDENTIFIER', 'SCOPE+1', 'OPERATOR', 'INTEGER', 'STRING']\
                         or (a[0] == 'OPERATOR' and a[1] != '='):
