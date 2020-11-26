@@ -8,7 +8,6 @@ First started on: 22/11/18.
 import error
 import func
 import lexer
-import parse_code
 import sys
 
 if not sys.argv[1:]:
@@ -27,8 +26,9 @@ except FileNotFoundError if sys.version_info[0] > 2 else IOError:
 
 src = func.remove_comments(src)
 pretokens = lexer.tokenise(src)
+print(pretokens)
 error.error_check(src)
-#tokens = parse_code.process(pretokens)
-#compiled = parse_code.parse_code(tokens)
+tokens = process(pretokens)
+#compiled = parse_code(tokens)
 #compiled += '\nif "Main" in globals():\n  a = Main(*sys.argv[1:])\nelse:\n  error.error_code(0, ' + str(len(s)) + ', ["' + s[len(s)-1] + '", "' + s[len(s)-2] + '", None])'
 #error.env(compiled, {'error': error})
